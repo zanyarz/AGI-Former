@@ -1,0 +1,21 @@
+\section{\textbf{Conclusion}}
+
+This paper introduced AGI-Former, a novel and testable end-to-end deep learning architecture for artificial general intelligence. The proposal operationalizes AGI as integrated multimodal agency: the capacity to transform heterogeneous sensory and linguistic information into coherent thought and action across tasks, environments, and time \cite{zohourian2026agi}. Rather than coordinating a discrete collection of specialist models through externally defined routing, AGI-Former places modality-specific encoding, causal thought--action modeling, cross-modal integration, and action generation within a common trainable architecture.
+
+Three complementary organizations were developed. The disjoint architecture generates specialized outputs for modalities, tools, effectors, or regions whose action spaces must remain distinct. The joint architecture produces a unified thought--action sequence after action-conditioned multimodal fusion, allowing dependencies among outputs to be represented directly. The hierarchical architecture combines these forms: a joint global coordinator generates supervisory tokens, while disjoint regional agents ground those tokens in local observations, capabilities, constraints, and feedback. Together, these variants define a progression from integrated perception and action to coordinated multi-agent agency without assuming that one output structure is optimal for every task.
+
+The paper also translated its architectural claims into falsifiable hypotheses. Matched-budget comparisons, controlled ablations, held-out compositions, missing- and conflicting-modality tests, causal grounding interventions, efficiency measurements, and hierarchical coordination metrics were specified to distinguish architectural benefit from additional scale or favorable evaluation. Unified MHA and Unified Cross-MHA, derived from UTR \cite{zohourian2026utr}, remain candidate mechanisms whose contribution must likewise be established empirically.
+
+AGI-Former is not presented as evidence that AGI has already been achieved. Its immediate limitations include the absence of coherent datasets joining synchronized modalities, state, reasoning, actions, consequences, and feedback, as well as the computational cost of end-to-end multimodal training. Future work will construct bounded training episodes from embodied resources and scientifically rich videos, develop compact prototypes, evaluate the proposed mechanisms under controlled conditions, and scale only where evidence supports doing so.
+
+The principal contribution is therefore a concrete research path: an architectural specification that connects multimodal perception to persistent thought, action, feedback, and hierarchical coordination, while remaining implementable, comparable, and open to falsification. Whether AGI-Former advances general intelligence is ultimately an experimental question; this work defines the system and evidence required to begin answering it.
+
+\section*{Declaration of Generative AI Assistance}
+During the preparation of this manuscript, the author used OpenAI's
+ChatGPT for iterative drafting assistance, language refinement,
+structural organization, and literature-discovery support. The central
+arguments, theoretical framework, interpretation of sources, and final
+conclusions were determined and critically reviewed by the author. The
+author independently verified the cited literature, revised the
+generated material, and assumes full ownership and responsibility for the accuracy,
+originality, and integrity of the manuscript.

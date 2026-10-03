@@ -1,0 +1,153 @@
+\section{\textbf{Problem Formulation and Design Principles}}
+
+This section defines the computational problem addressed by AGI-Former and the requirements against which its architectures can be evaluated. The objective is not to formalize AGI as a binary property. Instead, we define a trainable perception--state--action system whose degree of generality can be measured across modalities, tasks, environments, and embodiments.
+
+\subsection{\textbf{Multimodal Interaction Setting}}
+
+Let an agent interact with an environment over discrete decision steps $t=1,\ldots,T$. Let $\mathcal{M}$ denote the set of available input modalities, such as image, video, audio, language, or another sensory channel. At step $t$, the raw observation from modality $m\in\mathcal{M}$ is denoted by $x_t^{(m)}$. A modality-specific tokenizer or front end $\tau_m$ converts the raw observation into a sequence of $N_{m,t}$ tokens of dimension $d_m$:
+
+\begin{equation}
+\begin{aligned}
+    X_t^{(m)}
+    &= \tau_m\!\left(x_t^{(m)}\right)
+     \in \mathbb{R}^{N_{m,t}\times d_m},
+    && m\in\mathcal{M}.
+\end{aligned}
+\label{eq:modality_tokenization}
+\end{equation}
+
+The tokenization operation is modality dependent. Images may be divided into spatial patches, videos into spatiotemporal tubelets, audio into waveform segments or time--frequency patches, and language into discrete text tokens. Other sensory streams may use learned projections appropriate to their structure. AGI-Former does not require the raw modalities to share a tokenization method or an initial feature dimension.
+
+Each token sequence is mapped by a modality-specific encoder $E_m$ into a common model dimension $d$:
+
+\begin{equation}
+\begin{aligned}
+    H_t^{(m)}
+    &= E_m\!\left(X_t^{(m)}\right)
+     \in \mathbb{R}^{N_{m,t}\times d},
+    && m\in\mathcal{M}.
+\end{aligned}
+\label{eq:modality_encoding}
+\end{equation}
+
+The common dimension makes cross-modal attention possible without requiring all modalities to be converted into language. The lengths $N_{m,t}$ remain modality specific, allowing each encoder to preserve spatial, temporal, or sequential organization.
+
+\subsection{\textbf{Causal Thought--Action State}}
+
+Let $y_t=(y_{t,1},\ldots,y_{t,L_t})$ denote the output-token sequence produced at decision step $t$. An output token may represent an internal planning symbol, a natural-language response, a tool invocation, a discrete control command, or a tokenized continuous action. We use the term \textit{thought--action token} for this common decoder interface. The term does not assert phenomenal consciousness or guarantee that an internal token is a faithful verbal explanation; it identifies tokens that update the agent's computational state or affect its environment.
+
+The causal history available before generation at step $t$ is
+
+\begin{equation}
+\begin{aligned}
+    Y_{<t}
+    &= \bigl[y_1;\,y_2;\,\ldots;\,y_{t-1}\bigr],\\
+    S_t
+    &= D_{\mathrm{causal}}\!\left(Y_{<t}\right)
+     \in \mathbb{R}^{L_{<t}\times d},
+\end{aligned}
+\label{eq:causal_state}
+\end{equation}
+
+where $[\cdot;\cdot]$ denotes sequence concatenation and $D_{\mathrm{causal}}$ is a masked decoder-state transformation. During training, the history is formed from ground-truth or scheduled-sampling tokens. During inference, it is formed autoregressively from previously generated tokens. Consequently, the same causal state can carry task instructions, intermediate decisions, prior actions, and feedback from earlier interaction steps.
+
+\subsection{\textbf{Conditional Thought and Action Generation}}
+
+Given the encoded observations $\{H_t^{(m)}\}_{m\in\mathcal{M}}$ and causal state $S_t$, AGI-Former models the conditional distribution of the next output sequence as
+
+\begin{equation}
+\begin{aligned}
+    p_{\theta}\!\left(y_t
+    \mid Y_{<t},\{x_{\leq t}^{(m)}\}_{m\in\mathcal{M}}\right)
+    &= \prod_{\ell=1}^{L_t}
+       p_{\theta}\!\left(
+       y_{t,\ell}
+       \mid y_{t,<\ell},S_t,
+       \{H_{\leq t}^{(m)}\}_{m\in\mathcal{M}}
+       \right),
+\end{aligned}
+\label{eq:conditional_generation}
+\end{equation}
+
+where $\theta$ contains the trainable tokenizer projections, encoders, attention operations, decoder, and output heads included by a particular implementation. The architecture may use only the current encoded observations or may retain encoded histories through memory tokens, recurrence, or an external memory mechanism. The essential requirement is that the next output is conditioned jointly on prior thought--action state and multimodal evidence.
+
+For a tokenized training trajectory $\mathcal{D}$, the basic autoregressive objective is
+
+\begin{equation}
+\begin{aligned}
+    \mathcal{L}_{\mathrm{tok}}(\theta)
+    &= -\sum_{(X,Y)\in\mathcal{D}}
+       \sum_{t=1}^{T}
+       \sum_{\ell=1}^{L_t}
+       \log p_{\theta}\!\left(
+       y_{t,\ell}
+       \mid y_{t,<\ell},S_t,
+       \{H_{\leq t}^{(m)}\}_{m\in\mathcal{M}}
+       \right).
+\end{aligned}
+\label{eq:token_objective}
+\end{equation}
+
+This objective can be combined with modality reconstruction, contrastive alignment, value estimation, reinforcement learning, safety constraints, or task-specific losses. These extensions change the learning signal but not the core perception--state--action formulation.
+
+\subsection{\textbf{Disjoint and Joint Output Spaces}}
+
+AGI-Former supports two output organizations. In the disjoint organization, each modality or effector $m$ can produce a distinct output sequence $y_t^{(m)}$ with its own vocabulary, head, or execution semantics:
+
+\begin{equation}
+\begin{aligned}
+    \mathcal{Y}^{\mathrm{dis}}_t
+    &= \left\{y_t^{(m)}:m\in\mathcal{M}_{\mathrm{out}}\right\},\\
+    y_t^{(m)}
+    &\sim p_{\theta_m}\!\left(
+       y_t^{(m)}\mid S_t,H_t^{(m)}
+       \right).
+\end{aligned}
+\label{eq:disjoint_outputs}
+\end{equation}
+
+This form is appropriate when outputs are not naturally expressed in one token space or when independent actions must be preserved. In the joint organization, action-conditioned evidence from the available modalities is fused before one coordinated sequence is generated:
+
+\begin{equation}
+\begin{aligned}
+    y_t^{\mathrm{joint}}
+    &\sim p_{\theta}\!\left(
+       y_t^{\mathrm{joint}}
+       \mid S_t,\{H_t^{(m)}\}_{m\in\mathcal{M}}
+       \right).
+\end{aligned}
+\label{eq:joint_output}
+\end{equation}
+
+Equations~\eqref{eq:disjoint_outputs} and \eqref{eq:joint_output} define the output problems only. Sections~IV and V specify the attention paths used to construct their respective conditional representations.
+
+\subsection{\textbf{Design Principles}}
+
+The formulation imposes six design principles.
+
+\textit{Modality-native representation:} Each sensory stream may use an encoder and token geometry suited to its structure. A shared model dimension enables interaction, but does not require premature conversion into text or a universal raw token format.
+
+\textit{Causal state persistence:} Previous outputs must influence subsequent selection of sensory evidence. The architecture therefore treats thought and action history as an evolving causal state rather than an independent final readout.
+
+\textit{Action-conditioned perception:} Sensory evidence should not be fused indiscriminately. The current state queries each modality so that relevance is determined with respect to the pending thought or action.
+
+\textit{End-to-end credit assignment:} When training data and compute permit, a loss on final outputs should propagate through the decoder, cross-modal attention, modality encoders, and trainable tokenization layers. This requirement distinguishes architectural integration from a pipeline whose components communicate only through non-differentiable interfaces.
+
+\textit{Output-structure flexibility:} General agency may require one coordinated action, several simultaneous actions, or outputs with incompatible semantics. The architecture therefore admits both joint and disjoint output spaces rather than treating either organization as universally sufficient.
+
+\textit{Modality and task extensibility:} Adding a modality should primarily require a tokenizer, an encoder, and its connection to the shared attention interface; adding a task should not require redesigning the complete architecture. This is an architectural target, not a guarantee of zero-shot generalization.
+
+\subsection{\textbf{Testable Architectural Claims}}
+
+The preceding principles yield falsifiable comparisons. Let $\mathcal{A}_{\mathrm{joint}}$, $\mathcal{A}_{\mathrm{dis}}$, and $\mathcal{A}_{\mathrm{route}}$ denote the joint AGI-Former, disjoint AGI-Former, and externally routed specialist baseline, respectively. The paper does not assume a universal performance ordering among them. Instead, it proposes to test whether
+
+\begin{equation}
+\begin{aligned}
+    \Delta_{k}(\mathcal{A}_i,\mathcal{A}_j)
+    &= M_k(\mathcal{A}_i)-M_k(\mathcal{A}_j),
+    && k\in\mathcal{K},
+\end{aligned}
+\label{eq:architecture_comparison}
+\end{equation}
+
+is positive, negative, or statistically indistinguishable from zero for metrics $M_k$ drawn from a set $\mathcal{K}$ that includes task success, cross-modal grounding, transfer, robustness to missing or corrupted modalities, latency, computational cost, and sample efficiency. Component ablations can separately measure the effects of causal action conditioning, modality-specific encoders, fusion placement, and the final joint decoder. Under this formulation, AGI-Former is supported only to the extent that its proposed mechanisms produce reproducible advantages or informative tradeoffs under controlled evaluation.

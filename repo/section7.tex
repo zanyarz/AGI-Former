@@ -1,0 +1,201 @@
+\section{\textbf{Experimental Protocol and Testability}}
+
+AGI-Former is an architectural proposal rather than a report of completed training runs. Its scientific value therefore depends on whether its claims can be translated into controlled experiments that may support, weaken, or falsify the proposed mechanisms. This section defines such a protocol. The objective is not to select a benchmark whose aggregate score can be labeled AGI; it is to test whether the architecture improves measurable components of integrated multimodal agency under matched conditions.
+
+\subsection{\textbf{Research Questions and Hypotheses}}
+
+The evaluation should address six primary questions.
+
+\textit{H1---Integration:} Does a jointly trained perception--state--action path outperform an externally routed collection of modality specialists when parameter count, training data, tool access, and inference budget are controlled?
+
+\textit{H2---Action-conditioned fusion:} Does conditioning each modality on the causal thought--action state before fusion improve decisions relative to early fusion of unconditioned modality representations?
+
+\textit{H3---Output organization:} Under which output semantics does a joint stream outperform disjoint streams, and when does branch specialization provide superior accuracy, interpretability, latency, or safety?
+
+\textit{H4---Persistent state:} Does retaining prior thought and action tokens improve long-horizon consistency, recovery from error, and adaptation to feedback relative to a stateless multimodal predictor?
+
+\textit{H5---Hierarchical agency:} Does joint global coordination combined with disjoint regional execution reduce cross-agent conflicts and improve collective task success relative to independent regional agents or a flat joint model?
+
+\textit{H6---Unified attention:} Under otherwise matched conditions, do the UTR-derived Unified MHA and Unified Cross-MHA operations improve optimization, transfer, efficiency, or robustness relative to standard multi-head self- and cross-attention \cite{zohourian2026utr}?
+
+The hypotheses are intentionally comparative. Failure to reject a null hypothesis is informative: it may indicate that a simpler architecture provides equivalent capability or that a proposed mechanism matters only under restricted conditions.
+
+\subsection{\textbf{Compared Systems}}
+
+At minimum, the following systems should be implemented or reproduced.
+
+\begin{itemize}
+    \item \textit{Routed specialists:} independently trained modality models whose outputs are converted into text or structured messages and coordinated by a language-model supervisor, following the general orchestration pattern exemplified by HuggingGPT \cite{shen2023hugginggpt}.
+    \item \textit{Shared sequence policy:} a decoder-centered generalist model that tokenizes observations and actions within one sequence-modeling interface, following the design direction demonstrated by Gato \cite{reed2022generalist}.
+    \item \textit{Unified encoder--decoder:} a shared-token encoder--decoder baseline based on the architectural principles of Unified-IO 2 \cite{lu2024unifiedio2}.
+    \item \textit{Disjoint AGI-Former:} the architecture defined in Section~IV.
+    \item \textit{Joint AGI-Former:} the action-conditioned late-fusion architecture defined in Section~V.
+    \item \textit{Hierarchical AGI-Former:} the global joint and regional disjoint composition defined in Section~VI.
+\end{itemize}
+
+Direct comparison requires matched experimental envelopes. Let $P_i$, $C_i$, $D_i$, and $B_i$ denote the trainable parameters, training compute, training data, and inference budget of system $i$. A primary comparison is considered matched only when
+
+\begin{equation}
+\begin{aligned}
+    \frac{|P_i-P_j|}{\max(P_i,P_j)}&\leq\epsilon_P,\\
+    \frac{|C_i-C_j|}{\max(C_i,C_j)}&\leq\epsilon_C,\\
+    D_i&=D_j,
+    \qquad
+    B_i=B_j,
+\end{aligned}
+\label{eq:matched_budget}
+\end{equation}
+
+for predefined tolerances $\epsilon_P$ and $\epsilon_C$. Scaling experiments may relax these conditions, but must be reported separately from architecture-controlled comparisons.
+
+\subsection{\textbf{Task Families and Evaluation Splits}}
+
+No single task family is sufficient. Evaluation should progress through five levels.
+
+\textit{Single-modality competence} verifies that architectural integration does not destroy basic image, video, audio, language, or control capability. \textit{Paired-modality grounding} tests relationships such as vision--language, audio--video, instruction--action, and observation--feedback. \textit{Full multimodal coordination} requires several streams to contribute to one decision. \textit{Embodied interaction} evaluates closed-loop behavior in simulation before physical deployment. \textit{Hierarchical multi-agent tasks} require global planning, regional specialization, communication, and recovery from local failure.
+
+Training and evaluation episodes should be partitioned along several independent axes: familiar versus unseen task compositions, familiar versus unseen environments, observed versus unseen modality combinations, known versus novel action sequences, and intact versus perturbed observations. VIMA-style multimodal manipulation tasks and RT-2-style vision-language-action evaluation provide relevant embodied starting points \cite{jiang2023vima,zitkovich2023rt2}, but the hierarchical model additionally requires environments with multiple regions, effectors, or agents.
+
+Let $\mathcal{D}_{\mathrm{ID}}$ be the in-distribution evaluation set and let $\mathcal{D}_{g}$ denote an evaluation set withholding generalization factor $g$. For metric $M$, the generalization gap is
+
+\begin{equation}
+\begin{aligned}
+    \operatorname{Gap}_{g}(M)
+    &= M\!\left(\mathcal{D}_{\mathrm{ID}}\right)
+       -M\!\left(\mathcal{D}_{g}\right).
+\end{aligned}
+\label{eq:generalization_gap}
+\end{equation}
+
+The withheld factor $g$ must be specified before training so that post-hoc dataset selection cannot be used to manufacture an apparent generalization result.
+
+\subsection{\textbf{Performance and Coordination Metrics}}
+
+For $N$ evaluation episodes, task success is
+
+\begin{equation}
+\begin{aligned}
+    \operatorname{Success}
+    &= \frac{1}{N}\sum_{n=1}^{N}
+       \mathbb{I}\!\left[
+       \operatorname{GoalComplete}(n)=1
+       \right].
+\end{aligned}
+\label{eq:task_success}
+\end{equation}
+
+Success should be accompanied by action accuracy, cumulative reward where applicable, invalid-action rate, completion time, and intervention count. For joint or hierarchical tasks, a coordination-conflict rate measures incompatible simultaneous actions:
+
+\begin{equation}
+\begin{aligned}
+    \operatorname{ConflictRate}
+    &= \frac{
+       \sum_{n,t}
+       \mathbb{I}\!\left[
+       \operatorname{Conflict}
+       \left(\{y_{n,t}^{(r)}\}_{r\in\mathcal{R}}\right)=1
+       \right]
+       }{
+       \sum_{n,t}
+       \mathbb{I}\!\left[
+       |\mathcal{R}_{n,t}|>1
+       \right]
+       }.
+\end{aligned}
+\label{eq:coordination_conflict}
+\end{equation}
+
+Hierarchical evaluation should additionally record directive compliance, regional autonomy under communication loss, replan frequency, time to recover from failed agents, and disagreement between global supervisory tokens and executed local actions.
+
+Cross-modal grounding should be measured through intervention rather than attention visualization alone. For an example whose target depends on modality $m$, let $x^{(m,\mathrm{cf})}$ be a controlled counterfactual that changes the relevant evidence while preserving unrelated content. Grounding sensitivity is
+
+\begin{equation}
+\begin{aligned}
+    G_m
+    &= \mathbb{E}\!\left[
+       d_Y\!\left(
+       f_{\theta}(x),
+       f_{\theta}(x^{(m,\mathrm{cf})})
+       \right)
+       \right],
+\end{aligned}
+\label{eq:grounding_intervention}
+\end{equation}
+
+where $d_Y$ measures a task-appropriate change in the output distribution or executed action. Counterfactual relevance controls are required: changing an irrelevant feature should not produce the same response magnitude.
+
+\subsection{\textbf{Robustness and Missing Information}}
+
+Robustness tests should independently vary modality absence, corruption, delay, contradiction, and adversarially misleading inputs. Let $\delta$ denote perturbation severity and $M_i(\delta)$ the performance of system $i$. A normalized robustness score over severities $\Delta$ is
+
+\begin{equation}
+\begin{aligned}
+    R_i
+    &= \frac{1}{|\Delta|}
+       \sum_{\delta\in\Delta}
+       \frac{M_i(\delta)}{M_i(0)}.
+\end{aligned}
+\label{eq:normalized_robustness}
+\end{equation}
+
+Missing-modality tests must distinguish graceful degradation from hidden substitution. A system should not receive a text description generated from a withheld image unless that auxiliary model and its cost are explicitly part of every compared system.
+
+For conflicting modalities, evaluation should measure whether the model detects uncertainty, requests clarification, prioritizes the more reliable source, or produces an unsafe confident action. Calibration metrics should therefore accompany accuracy.
+
+\subsection{\textbf{Ablation Matrix}}
+
+The complete architectures should be compared against mechanism-level ablations:
+
+\begin{itemize}
+    \item replace Unified MHA and Unified Cross-MHA with standard attention;
+    \item remove the persistent causal thought--action state;
+    \item concatenate encoder outputs before action conditioning;
+    \item remove modality-identity embeddings;
+    \item replace modality-specific encoders with one shared encoder;
+    \item remove the final joint decoder;
+    \item disable modality and regional dropout;
+    \item remove auxiliary grounding losses;
+    \item remove the global coordinator from the hierarchy;
+    \item hold the supervisory plan fixed instead of replanning from feedback.
+\end{itemize}
+
+Each ablation should change one mechanism while preserving parameter count as closely as possible. When exact matching is impossible, a width-adjusted control should determine whether an improvement arises from the mechanism or merely from additional capacity.
+
+\subsection{\textbf{Efficiency and Systems Metrics}}
+
+End-to-end integration may reduce routing and representation-conversion overhead while increasing the cost of joint attention. The evaluation must therefore report training FLOPs, inference FLOPs, peak memory, model storage, wall-clock latency, throughput, communication volume, and energy where measurable. A cost-normalized score can supplement, but not replace, the unnormalized task metrics:
+
+\begin{equation}
+\begin{aligned}
+    \operatorname{Eff}_{i}(M)
+    &= \frac{M_i}{
+       \alpha F_i+\beta L_i+\gamma E_i
+       },
+\end{aligned}
+\label{eq:cost_normalized_efficiency}
+\end{equation}
+
+where $F_i$, $L_i$, and $E_i$ are inference FLOPs, latency, and energy, and the normalization coefficients must be declared before comparison. Because different deployments value these quantities differently, the complete Pareto frontier should also be reported.
+
+\subsection{\textbf{Statistical Reporting and Reproducibility}}
+
+Every trainable condition should use multiple random seeds and identical data splits. For paired episode scores $z_{i,n}$ and $z_{j,n}$, report the mean paired difference
+
+\begin{equation}
+\begin{aligned}
+    \widehat{\Delta}_{ij}
+    &= \frac{1}{N}\sum_{n=1}^{N}
+       \left(z_{i,n}-z_{j,n}\right),
+\end{aligned}
+\label{eq:paired_effect}
+\end{equation}
+
+with confidence intervals obtained from a paired bootstrap or an appropriate hierarchical procedure when episodes are nested within seeds or environments. Statistical significance should be accompanied by effect size and uncertainty. Hypotheses, primary metrics, exclusion criteria, stopping rules, and planned comparisons should be fixed before examining final test performance.
+
+Reproducibility requires release of preprocessing code, tokenizer definitions, model configurations, initialization seeds, training schedules, parameter and compute accounting, evaluation environments, and failed or neutral ablations. Comparisons to closed systems should be labeled observational when weights, training data, or routing logic cannot be controlled.
+
+\subsection{\textbf{Interpretation and Falsification Criteria}}
+
+The evidence would support AGI-Former's architectural claims if improvements are reproducible across task families, survive matched-budget controls, and are attributable to the proposed mechanisms through ablation. The claims would be weakened if routed specialists match the end-to-end models at lower cost, early fusion consistently matches action-conditioned fusion, persistent state provides no long-horizon benefit, joint outputs increase conflicts, or hierarchical coordination fails to outperform independent regional agents.
+
+Even comprehensive positive results would establish neither consciousness nor superintelligence, and they would not by themselves prove AGI. They would provide evidence that a particular end-to-end architecture supports measurable components of integrated multimodal agency. Broader claims require sustained transfer to genuinely novel environments, reliable learning from limited experience, safe long-horizon autonomy, and replication beyond the developers' selected tasks.

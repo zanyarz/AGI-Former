@@ -1,0 +1,76 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{manyfoot}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{listings}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage[export]{adjustbox}
+\usepackage{tabularx}
+\usepackage{xurl}
+\usepackage[hidelinks,breaklinks=true]{hyperref}
+\Urlmuskip=0mu plus 1mu
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{AGI-Former: a novel and testable end-to-end deep learning model for artificial general intelligence\\
+%{\footnotesize \textsuperscript{*}Note: Sub-titles are not captured in Xplore and
+%should not be used}
+%\thanks{Identify applicable funding agency here. If none, delete this.}
+}
+
+\author{
+\IEEEauthorblockN{Zanyar Zohourianshahzadi}
+\IEEEauthorblockA{
+\textit{Artificial Intelligence, Computer Science, and CyberSecurity} \\
+\textit{B.S. CS \& IT: Azad University of Tehran South Branch} \\
+\textit{M.S. IT \& CyberSecurity: Colorado Technical University} \\
+\textit{Ph.D. AI \& CS: University of Colorado Colorado Springs} \\
+Colorado Springs, Colorado, USA \\
+Email: {zanyarz@me.com \& zanyarz@gmail.com}
+}
+}
+
+\maketitle
+
+\begin{abstract}
+Artificial general intelligence (AGI) requires more than placing specialist models behind a shared interface. It requires an integrated architecture that transforms heterogeneous observations into persistent state, coherent reasoning, and grounded action. This paper introduces AGI-Former, a novel and testable end-to-end deep learning architecture for AGI formulated as integrated multimodal agency. AGI-Former combines modality-specific encoders for language, images, video, audio, and extensible sensory streams with a causal thought-action decoder and Unified Attention mechanisms derived from the Unified Transformer (UTR). Three complementary configurations are developed. The disjoint architecture produces specialized output streams for distinct modalities, tools, effectors, or regions. The joint architecture performs action-conditioned multimodal fusion and generates a unified thought-action sequence. The hierarchical architecture combines joint global coordination with disjoint regional execution through recurrent supervisory, state, action, uncertainty, and feedback tokens. To make the proposal falsifiable, we specify matched-budget baselines, mechanism-level ablations, held-out generalization tests, causal grounding interventions, robustness evaluations, coordination measures, and efficiency metrics. We identify the absence of coherent datasets linking synchronized multimodal observations, state, reasoning, actions, consequences, and feedback as the primary practical limitation, alongside training cost. Scientifically rich videos and embodied datasets are proposed as starting points for constructing bounded training episodes and progressively scaled experiments. AGI-Former is presented not as evidence that AGI has been achieved, but as an implementable and empirically testable architecture for investigating integrated multimodal agency.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Super Intelligence, AGI, General Intelligence, Artificial Consciousness, Machine Consciousness
+\end{IEEEkeywords}
+
+
+\input{section1}
+\input{section2}
+\input{section3}
+\input{section4}
+\input{section5}
+\input{section6}
+\input{section7}
+\input{section8}
+\input{section9}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\vspace{12pt}
+\color{red}
+
+\end{document}
